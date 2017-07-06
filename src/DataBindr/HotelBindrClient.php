@@ -7,13 +7,27 @@ use GuzzleHttp\Client;
 use Alexandreo\DataBindr\Constants\ApiDataBindConstant;
 use Illuminate\Support\Collection;
 
+/**
+ * Class HotelBindrClient
+ * @package Alexandreo\DataBindr
+ */
 class HotelBindrClient
 {
 
+    /**
+     * @var Client
+     */
     private $client;
 
+    /**
+     * @var array
+     */
     private $apiDataBindConstant = [];
 
+    /**
+     * HotelBindrClient constructor.
+     * @param bool $https
+     */
     public function __construct($https = true)
     {
         $this->apiDataBindConstant = ApiDataBindConstant::getConstants();
@@ -27,13 +41,18 @@ class HotelBindrClient
 
     }
 
+    /**
+     * @param HotelBindrRequest $hotelBindrRequest
+     * @return bool|mixed
+     * @throws HotelBindrException
+     */
     public function hotelbindr(HotelBindrRequest $hotelBindrRequest)
     {
         try {
             $hotelbindr = $this->client->post('hotelbindr', [
                 'body' => $hotelBindrRequest->toJson()
             ]);
-            return new Collection(json_decode((string)$hotelbindr->getBody(), true));
+            return data_get(json_decode((string)$hotelbindr->getBody()), 'bind_id');
         } catch (\GuzzleHttp\Exception\BadResponseException $e) {
             throw new HotelBindrException(data_get($this->apiDataBindConstant, 'HTTP_' . $e->getCode()));
         } catch (\GuzzleHttp\Exception\ConnectException $e) {
@@ -47,6 +66,8 @@ class HotelBindrClient
         } catch (\GuzzleHttp\Exception\TransferException $e) {
             throw new HotelBindrException(data_get($this->apiDataBindConstant, 'HTTP_' . $e->getCode()));
         }
+
+        return false;
     }
 
 }

@@ -4,8 +4,6 @@ namespace Alexandreo\DataBindr;
 
 use Alexandreo\DataBindr\Requests\HotelBindrRequest;
 
-
-
 /**
  * Class DataBindr
  * @package Alexandreo\DataBindr
@@ -37,6 +35,10 @@ class HotelBindr
         $this->hotelBindrClient = new HotelBindrClient((bool)data_get($config, 'ssl'));
     }
 
+    /**
+     * @param $request
+     * @return \Illuminate\Support\Collection
+     */
     public function hotelbindr($request)
     {
         if ($request instanceof HotelBindrRequest || is_array($request)) {
@@ -45,10 +47,13 @@ class HotelBindr
             throw new \InvalidArgumentException('Invalid Request');
         }
 
-        $a = $this->hotelBindrClient->hotelbindr($hotelBindrRequest);
-        dd($a);
+        return $this->hotelBindrClient->hotelbindr($hotelBindrRequest);
     }
 
+    /**
+     * @param array $request
+     * @return HotelBindrRequest
+     */
     private function transformRequestArrayToObject(array $request)
     {
         $hotelBindrRequest = new HotelBindrRequest();

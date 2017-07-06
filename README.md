@@ -1,4 +1,18 @@
-<?php
+# Data Bindr Client
+ 
+Project for integration with databindr (Hotel Mapping).
+
+## Install
+### Composer
+```
+"alexandreo/data-bindr": "^1.0"
+```
+##Integration documentation with the Databindr
+https://www.databindr.com/#!/docs
+
+
+## How to use
+```php
 require 'vendor/autoload.php';
 
 use Alexandreo\DataBindr\HotelBindr;
@@ -21,4 +35,9 @@ try {
     dd($e->getMessage());
 }
 
+
+
+```
+##Exemples
+https://github.com/alexandreo/DataBindrClient/blob/master/exemples/
 

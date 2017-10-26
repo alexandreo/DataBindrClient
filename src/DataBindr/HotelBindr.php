@@ -3,6 +3,7 @@
 namespace Alexandreo\DataBindr;
 
 use Alexandreo\DataBindr\Requests\HotelBindrRequest;
+use Illuminate\Support\Collection;
 
 /**
  * Class DataBindr
@@ -39,13 +40,15 @@ class HotelBindr
      * @param $request
      * @return \Illuminate\Support\Collection
      */
-    public function hotelbindr($request)
+    public function hotelbindr(array $requests)
     {
-        if ($request instanceof HotelBindrRequest || is_array($request)) {
-            $hotelBindrRequest = is_array($request) ? $this->transformRequestArrayToObject($request) : $request;
-        } else {
-            throw new \InvalidArgumentException('Invalid Request');
+        $hotelBindrRequest = new Collection();
+        foreach ($requests as $request) {
+            $hotelBindrRequest[] = is_array($request) ? $this->transformRequestArrayToObject($request) : $request;
         }
+
+        if ($hotelBindrRequest->count() === 0)
+            throw new \InvalidArgumentException('Invalid Request');
 
         return $this->hotelBindrClient->hotelbindr($hotelBindrRequest);
     }

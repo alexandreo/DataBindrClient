@@ -3,9 +3,14 @@
 namespace Alexandreo\DataBindr;
 
 use Alexandreo\DataBindr\Requests\HotelBindrRequest;
-use GuzzleHttp\Client;
 use Alexandreo\DataBindr\Constants\ApiDataBindConstant;
+use Alexandreo\DataBindr\Responses\HotelBindrResponse;
+use Amp\Artax\Request;
 use Illuminate\Support\Collection;
+
+use Amp\Loop;
+use Amp\Promise;
+use Amp\Artax\DefaultClient;
 
 /**
  * Class HotelBindrClient
@@ -15,30 +20,14 @@ class HotelBindrClient
 {
 
     /**
-     * @var Client
-     */
-    private $client;
-
-    /**
      * @var array
      */
     private $apiDataBindConstant = [];
 
-    /**
-     * HotelBindrClient constructor.
-     * @param bool $https
-     */
-    public function __construct($https = true)
+
+    public function __construct()
     {
         $this->apiDataBindConstant = ApiDataBindConstant::getConstants();
-
-        $this->client = new Client([
-            'base_uri' => ($https == true ? 'https://' : 'http://') . data_get($this->apiDataBindConstant, 'URI'),
-            'headers'  => [
-                'Content-Type' => 'application/json; charset=utf-8'
-            ],
-        ]);
-
     }
 
     /**
@@ -46,28 +35,38 @@ class HotelBindrClient
      * @return bool|mixed
      * @throws HotelBindrException
      */
-    public function hotelbindr(HotelBindrRequest $hotelBindrRequest)
+    public function hotelbindr(Collection $hotelBindrRequest)
     {
-        try {
-            $hotelbindr = $this->client->post('hotelbindr', [
-                'body' => $hotelBindrRequest->toJson()
-            ]);
-            return data_get(json_decode((string)$hotelbindr->getBody()), 'bind_id');
-        } catch (\GuzzleHttp\Exception\BadResponseException $e) {
-            throw new HotelBindrException(data_get($this->apiDataBindConstant, 'HTTP_' . $e->getCode()));
-        } catch (\GuzzleHttp\Exception\ConnectException $e) {
-            throw new HotelBindrException(data_get($this->apiDataBindConstant, 'HTTP_' . $e->getCode()));
-        } catch (\GuzzleHttp\Exception\RequestException $e) {
-            throw new HotelBindrException(data_get($this->apiDataBindConstant, 'HTTP_' . $e->getCode()));
-        } catch (\GuzzleHttp\Exception\SeekException $e) {
-            throw new HotelBindrException(data_get($this->apiDataBindConstant, 'HTTP_' . $e->getCode()));
-        } catch (\GuzzleHttp\Exception\TooManyRedirectsException $e) {
-            throw new HotelBindrException(data_get($this->apiDataBindConstant, 'HTTP_' . $e->getCode()));
-        } catch (\GuzzleHttp\Exception\TransferException $e) {
-            throw new HotelBindrException(data_get($this->apiDataBindConstant, 'HTTP_' . $e->getCode()));
-        }
+        $dataBindrResponse = new Collection();
+        Loop::run(function () use($hotelBindrRequest, &$dataBindrResponse) {
+            $httpClient = new DefaultClient;
+            $bodyRequest = $hotelBindrRequest->map(function($hotelBindrRequest){
+                return $hotelBindrRequest->toJson();
+            })->toArray();
 
-        return false;
+            try {
+                $responses = yield array_map(function ($request) use ($httpClient) {
+                    $request = (new Request( data_get($this->apiDataBindConstant, 'URI') . '/hotelbindr', "POST"))
+                        ->withHeader("Content-Type", "application/json; charset=utf-8")
+                        ->withBody($request);
+                    return $httpClient->request($request);
+                }, $bodyRequest);
+
+                foreach ($responses as $key => $response) {
+                    $body = yield $response->getBody();
+                    $dataBindrResponse[] = (new HotelBindrResponse)
+                        ->setHotelBindrRequest($hotelBindrRequest[$key])
+                        ->setBindId(data_get(json_decode((string)$body), 'bind_id'))
+                        ->setError($response->getStatus() !== 200)
+                        ->setErrorReason(data_get($this->apiDataBindConstant, 'HTTP_' . $response->getStatus()));
+                }
+            } catch (\Amp\MultiReasonException $e) {
+                throw new HotelBindrException(data_get($this->apiDataBindConstant, 'HTTP_' . $e->getCode()));
+            }
+            Loop::stop();
+        });
+
+        return $dataBindrResponse;
     }
 
 }

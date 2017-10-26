@@ -1,245 +1,95 @@
 <?php
 
-namespace Alexandreo\DataBindr\Requests;
+namespace Alexandreo\DataBindr\Responses;
 
-use Illuminate\Support\Collection;
-use SameerShelavale\PhpCountriesArray\CountriesArray;
+use Alexandreo\DataBindr\Requests\HotelBindrRequest;
 
-/**
- * Class HotelBindrRequest
- * @package Alexandreo\DataBindr\Requests
- */
-/**
- * Class HotelBindrRequest
- * @package Alexandreo\DataBindr\Requests
- */
-class HotelBindrRequest extends KeyRequest
+class HotelBindrResponse
 {
 
-    /**
-     * @var
-     */
-    private $country_id;
+    private $hotelBindrRequest;
 
-    /**
-     * @var
-     */
-    private $name;
+    private $bind_id;
 
-    /**
-     * @var
-     */
-    private $address;
+    private $error = false;
 
-    /**
-     * @var
-     */
-    private $category;
-
-    /**
-     * @var
-     */
-    private $town;
-
-    /**
-     * @var
-     */
-    private $zip;
-
-    /**
-     * @var
-     */
-    private $longitude;
-
-    /**
-     * @var
-     */
-    private $latitude;
+    private $errorReason;
 
     /**
      * @return mixed
      */
-    public function getCountryId()
+    public function getBindId()
     {
-        return $this->country_id;
+        return $this->bind_id;
     }
 
     /**
-     * @param mixed $country_id
-     * @return HotelBindrRequest
+     * @param mixed $bind_id
+     * @return HotelBindrResponse
      */
-    public function setCountryId($country_id)
+    public function setBindId($bind_id)
     {
-        $country_id = strtoupper($country_id);
-
-        if (strlen($country_id) == 2) {
-            $countriesAlpha2 = CountriesArray::get('alpha2');
-            if (!data_get($countriesAlpha2, $country_id)){
-                throw new \InvalidArgumentException('invalid country_id.');
-            }
-        } else if(strlen($country_id) == 3) {
-            $countriesAlpha3 = CountriesArray::get('alpha3', 'alpha2');
-            if (data_get($countriesAlpha3, $country_id)){
-                $country_id = data_get($countriesAlpha3, $country_id);
-            } else{
-                throw new \InvalidArgumentException('invalid country_id.');
-            }
-        } else {
-            $countriesName = (new Collection(CountriesArray::get('alpha2', 'name')))->filter(function($value) use($country_id){
-                return strtoupper($country_id) == strtoupper($value);
-            });
-            if ($countriesName->count() === 1){
-                $country_id = (string)$countriesName->keys()->first();
-            } else{
-                throw new \InvalidArgumentException('invalid country_id.');
-            }
-        }
-        $this->country_id = $country_id;
+        $this->bind_id = $bind_id;
         return $this;
     }
 
     /**
      * @return mixed
      */
-    public function getName()
+    public function getHotelBindrRequest()
     {
-        return $this->name;
+        return $this->hotelBindrRequest;
     }
 
     /**
-     * @param mixed $name
-     * @return HotelBindrRequest
+     * @param mixed $hotelBindrRequest
+     * @return HotelBindrResponse
      */
-    public function setName($name)
+    public function setHotelBindrRequest(HotelBindrRequest $hotelBindrRequest)
     {
-        $this->name = $name;
+        $this->hotelBindrRequest = $hotelBindrRequest;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isError()
+    {
+        return $this->error;
+    }
+
+    /**
+     * @param bool $error
+     * @return HotelBindrResponse
+     */
+    public function setError($error)
+    {
+        $this->error = $error;
         return $this;
     }
 
     /**
      * @return mixed
      */
-    public function getAddress()
+    public function getErrorReason()
     {
-        return $this->address;
+        return $this->errorReason;
     }
 
     /**
-     * @param mixed $address
-     * @return HotelBindrRequest
+     * @param mixed $errorReason
+     * @return HotelBindrResponse
      */
-    public function setAddress($address)
+    public function setErrorReason($errorReason)
     {
-        $this->address = $address;
+        $this->errorReason = $errorReason;
         return $this;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getCategory()
+    public function __toString()
     {
-        return $this->category;
-    }
-
-    /**
-     * @param mixed $category
-     * @return HotelBindrRequest
-     */
-    public function setCategory($category)
-    {
-        $this->category = $category;
-        return $this;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getTown()
-    {
-        return $this->town;
-    }
-
-    /**
-     * @param mixed $town
-     * @return HotelBindrRequest
-     */
-    public function setTown($town)
-    {
-        $this->town = $town;
-        return $this;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getZip()
-    {
-        return $this->zip;
-    }
-
-    /**
-     * @param mixed $zip
-     * @return HotelBindrRequest
-     */
-    public function setZip($zip)
-    {
-        $this->zip = $zip;
-        return $this;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getLongitude()
-    {
-        return $this->longitude;
-    }
-
-    /**
-     * @param mixed $longitude
-     * @return HotelBindrRequest
-     */
-    public function setLongitude($longitude)
-    {
-        $this->longitude = $longitude;
-        return $this;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getLatitude()
-    {
-        return $this->latitude;
-    }
-
-    /**
-     * @param mixed $latitude
-     * @return HotelBindrRequest
-     */
-    public function setLatitude($latitude)
-    {
-        $this->latitude = $latitude;
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function toJson()
-    {
-        return json_encode([
-            'key' => $this->getKey(),
-            'country_id' => $this->getCountryId(),
-            'name' => $this->getName(),
-            'address' => $this->getAddress(),
-            'category' => $this->getCategory(),
-            'town' => $this->getTown(),
-            'zip' => $this->getZip(),
-            'longitude' => $this->getLongitude(),
-            'latitude' => $this->getLatitude(),
-        ]);
+        return (string)$this->getBindId();
     }
 
 }

@@ -8,7 +8,7 @@ class ApiDataBindConstant
 
     use \Alexandreo\DataBindr\ConstantTrait;
 
-    CONST URI = 'api.databindr.com/';
+    CONST URI = 'https://api.databindr.com/';
 
     CONST HTTP_400 = 'Error-Malformed-Request';
 
